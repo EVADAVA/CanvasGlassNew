@@ -1,0 +1,191 @@
+CANVASGLASSNEW
+Landing Sale Page Instructions
+
+Purpose
+Create a dedicated sales landing page for one painting from one episode.
+
+The page must convert interest into action immediately.
+A viewer who scans the QR during the video must land on the exact painting page, not on a generic hub.
+
+Core Principle
+One painting = one sales page.
+
+The page must feel:
+- emotionally aligned with the meditation experience
+- visually clean
+- commercially clear
+- easy to act on within seconds
+
+Input
+The page generator receives:
+
+- artist_name
+- artist_slug
+- painting_index
+- painting_title if available
+- painting_image
+- pd_text
+- narrative_pattern
+- adna_text or selected biography context
+- monologue_context_excerpt if needed
+- spotify_playlist_url optional
+- youtube_episode_url optional
+- buy_me_coffee_url
+- digital_file_url
+- etsy_print_url
+- commission_request_url
+- availability_status
+- price_data
+- rights_info
+
+Output
+A complete HTML landing sales page for one painting on evadava.com.
+
+Page Goal
+The page must help the visitor do one of these 4 things:
+
+1. Support the project with a small donation
+2. Buy the digital raw file for personal use only
+3. Buy print-on-demand or merch
+4. Request a commissioned physical painting
+
+UX Goal
+The page must answer instantly:
+
+- What is this painting?
+- Why does it matter?
+- What can I buy?
+- What is the difference between the offers?
+- What should I do next?
+
+Tone
+Use the emotional tone of the selected narrative_pattern, but keep the page commercially readable.
+
+The page must not feel:
+- generic
+- marketplace-cold
+- over-designed
+- manipulative
+- cluttered
+
+It should feel:
+- intimate
+- elegant
+- direct
+- modern
+- emotionally precise
+
+Required Sections
+
+1. Hero
+Must include:
+- painting image
+- painting title or working title
+- short emotional headline
+- one-line descriptor
+- primary CTA
+
+2. Painting Story
+Short text explaining:
+- the emotional character of the work
+- relation to the episode or artist inspiration
+- that this is an original response, not a copy
+
+3. Experience Context
+Optional short block:
+- this painting belongs to an immersive wine art meditation episode
+- can reference the artist and mood
+- can link back to episode or playlist if useful
+
+4. Product Options
+Must clearly present the 4 lanes:
+
+- Support the project
+- Get the digital file
+- Order print or merch
+- Commission an original painting
+
+Each option must explain:
+- what it is
+- who it is for
+- what the buyer receives
+
+5. Rights and Usage
+Especially for the digital file:
+- personal use only
+- no commercial rights
+- no reproduction rights unless explicitly stated
+
+6. Availability and Scarcity
+If relevant:
+- available
+- limited
+- made to order
+- commission only
+- sold or archived
+
+7. CTA Block
+Strong but calm CTA section:
+- support
+- buy
+- commission
+- contact
+
+8. Closing Note
+A short human closing line from Alex:
+- gratitude
+- invitation
+- emotional continuity with the video
+
+CTA Rules
+Primary CTA should match the most realistic conversion path.
+
+Recommended priority:
+1. digital file or print
+2. support
+3. commission
+
+Commission should feel premium, not casual.
+
+Commercial Rules
+Do not force all products equally.
+Let the page guide the viewer naturally.
+
+If the painting is emotionally strong but hard to price as original:
+- push digital and print first
+
+If the work is positioned as premium:
+- let commission become the prestige CTA
+
+Copy Rules
+- short paragraphs
+- strong headings
+- no academic language
+- no empty luxury language
+- no fake urgency
+- no over-explaining
+- no generic transform-your-life marketing
+
+Visual Rules
+- painting must dominate
+- product choices must be clear
+- mobile-first readability
+- fast scanning
+- QR visitor should understand page in under 5 seconds
+
+Conversion Rule
+The scanned user must never have to search for the painting they came for.
+
+Optional Enhancements
+Can include later:
+- episode excerpt
+- playlist reference
+- mood note
+- wine pairing note
+- behind-the-work note
+- Etsy bridge
+- collector inquiry form
+
+Non-Negotiable Rule
+This page is not a hub.
+It is a direct response page for one specific painting.
