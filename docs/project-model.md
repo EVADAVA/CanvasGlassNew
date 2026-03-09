@@ -302,6 +302,324 @@ At successful completion:
 - append used tracks to `tracks_registry`
 - append wine recommendations to `wine_registry`
 
+## Communication Layer Contract
+
+Communication is driven by Telegram natural-language messages interpreted by an LLM layer.
+
+The LLM does not execute actions directly. It converts user messages into structured intents that are validated against the current `episode_status`.
+
+### Communication Flow
+
+1. Telegram receives a user message.
+2. Script loads the active episode context.
+3. Script sends message text, current state, and allowed actions to the LLM.
+4. LLM returns a structured interpretation.
+5. Script validates the returned intent against the current state.
+6. Script executes the action or replies with a blocked/clarifying response.
+
+### Required Runtime Context
+
+The LLM interpreter must receive:
+
+- `episode_id`
+- `artist_name`
+- `artist_slug`
+- `episode_status`
+- `pending_user_step`
+- `allowed_intents`
+- `recent_system_messages`
+- `recent_user_messages`
+
+### Core User Intents
+
+- `start_episode`
+- `get_status`
+- `show_expected_next_step`
+- `show_cover_options`
+- `select_cover`
+- `confirm_render`
+- `confirm_publish`
+- `pause_episode`
+- `resume_episode`
+- `cancel_episode`
+- `help`
+
+### Intent Rules By Status
+
+#### Global intents
+
+These are allowed in any active state:
+
+- `get_status`
+- `show_expected_next_step`
+- `help`
+- `pause_episode`
+
+#### `queued`
+
+Allowed intents:
+- `start_episode`
+- `get_status`
+- `help`
+
+#### `initializing`
+
+Allowed intents:
+- `get_status`
+- `show_expected_next_step`
+- `pause_episode`
+
+#### `adna_ready`
+
+Allowed intents:
+- `get_status`
+- `show_expected_next_step`
+- `pause_episode`
+
+#### `prompts_ready`
+
+Allowed intents:
+- `get_status`
+- `show_expected_next_step`
+- `pause_episode`
+
+#### `awaiting_paintings`
+
+Allowed intents:
+- `get_status`
+- `show_expected_next_step`
+- `pause_episode`
+
+#### `paintings_ready`
+
+Allowed intents:
+- `get_status`
+- `show_expected_next_step`
+- `pause_episode`
+
+#### `analysis_ready`
+
+Allowed intents:
+- `get_status`
+- `show_expected_next_step`
+- `pause_episode`
+
+#### `playlist_ready`
+
+Allowed intents:
+- `get_status`
+- `show_cover_options`
+- `show_expected_next_step`
+- `pause_episode`
+
+#### `awaiting_cover_selection`
+
+Allowed intents:
+- `get_status`
+- `show_cover_options`
+- `select_cover`
+- `show_expected_next_step`
+- `pause_episode`
+
+#### `cover_selected`
+
+Allowed intents:
+- `get_status`
+- `show_expected_next_step`
+- `pause_episode`
+
+#### `monologues_ready`
+
+Allowed intents:
+- `get_status`
+- `show_expected_next_step`
+- `pause_episode`
+
+#### `youtube_package_ready`
+
+Allowed intents:
+- `get_status`
+- `show_expected_next_step`
+- `pause_episode`
+
+#### `ready_for_render`
+
+Allowed intents:
+- `get_status`
+- `show_expected_next_step`
+- `confirm_render`
+- `pause_episode`
+
+#### `rendering`
+
+Allowed intents:
+- `get_status`
+- `show_expected_next_step`
+
+#### `rendered`
+
+Allowed intents:
+- `get_status`
+- `show_expected_next_step`
+
+#### `awaiting_publish_confirmation`
+
+Allowed intents:
+- `get_status`
+- `show_expected_next_step`
+- `confirm_publish`
+- `pause_episode`
+
+#### `publishing`
+
+Allowed intents:
+- `get_status`
+- `show_expected_next_step`
+
+#### `published_private`
+
+Allowed intents:
+- `get_status`
+- `show_expected_next_step`
+
+#### `paused`
+
+Allowed intents:
+- `get_status`
+- `resume_episode`
+- `cancel_episode`
+- `help`
+
+#### `failed`
+
+Allowed intents:
+- `get_status`
+- `help`
+
+### Example User Phrases
+
+Examples are natural-language hints, not command syntax requirements.
+
+#### `start_episode`
+
+- `start`
+- `start next episode`
+- `let's go`
+- `begin`
+
+#### `get_status`
+
+- `status`
+- `where are we`
+- `what's the status`
+- `give me update`
+
+#### `show_expected_next_step`
+
+- `what are we waiting for`
+- `what's next`
+- `what do you need from me`
+
+#### `show_cover_options`
+
+- `give me covers`
+- `show covers`
+- `show playlist covers`
+
+#### `select_cover`
+
+- `1`
+- `2`
+- `3`
+- `choose 2`
+- `take cover 3`
+
+#### `confirm_render`
+
+- `+`
+- `render`
+- `go ahead`
+- `start render`
+
+#### `confirm_publish`
+
+- `publish`
+- `upload it`
+- `go publish`
+- `yes, publish`
+
+#### `pause_episode`
+
+- `pause`
+- `stop here`
+- `hold it`
+
+#### `resume_episode`
+
+- `resume`
+- `continue`
+- `go on`
+
+#### `cancel_episode`
+
+- `cancel`
+- `abort`
+- `stop this episode`
+
+#### `help`
+
+- `help`
+- `what can I say`
+- `what can you do`
+
+### LLM Output Schema
+
+The LLM interpreter must return structured JSON only.
+
+```json
+{
+  "intent": "select_cover",
+  "allowed": true,
+  "confidence": 0.98,
+  "arguments": {
+    "cover_index": 2
+  },
+  "reply": "Selected cover 2. Moving to the next step.",
+  "needs_clarification": false,
+  "clarification_question": null
+}
+```
+
+### Required Output Fields
+
+- `intent`: normalized intent name
+- `allowed`: whether the action is valid in the current episode state
+- `confidence`: numeric confidence score from 0 to 1
+- `arguments`: parsed action arguments
+- `reply`: user-facing message draft
+- `needs_clarification`: whether Script should ask a follow-up question instead of executing
+- `clarification_question`: follow-up question if clarification is needed
+
+### Validation Rules
+
+- if `intent` is not in `allowed_intents`, Script must reject execution
+- if required arguments are missing, `needs_clarification` must be `true`
+- numeric cover selection must only map to `select_cover` inside `awaiting_cover_selection`
+- `+` must only map to `confirm_render` inside `ready_for_render`
+- publish-like phrases must only map to `confirm_publish` inside `awaiting_publish_confirmation`
+- LLM must never fabricate unavailable assets, URLs, or state transitions
+
+### Response Style
+
+Script responses should be short, operational, and state-aware.
+
+Examples:
+
+- `Prompts are ready. Waiting for 3 paintings in the input folder.`
+- `Please choose one playlist cover: 1, 2, or 3.`
+- `Render is complete. Waiting for publish confirmation.`
+- `That action is not available right now. I am waiting for cover selection.`
+
 ## Agents
 
 ### ADNA Agent
