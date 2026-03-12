@@ -94,6 +94,19 @@ Playlist, wine, and invitation lines may flex in phrasing, order, and sentence r
 Prefer mild natural variation over rigid repetition.
 Do not let required elements sound like checklist items.
 
+FINAL PASS RULE
+If the execution layer receives an already-assembled draft, it must still perform a meaningful final rewrite.
+It is not enough to correct one fact label, add one adjective, or make only cosmetic substitutions.
+The final pass must improve at least one of:
+- spoken flow
+- sensory specificity
+- linkage between blocks
+- rhetorical pressure
+- emotional legibility
+
+If the draft is already strong, the final version may stay structurally close, but it must still sound intentionally finalized rather than lightly edited.
+Do not return a near-identical text unless the draft is already fully compliant and genuinely difficult to improve without damage.
+
 MON1 — Opening · Session 1 Invitation
 
 FUNCTION
@@ -163,6 +176,9 @@ NEGATIVE RULES
 - do not over-describe Painting 1 again
 - do not let the carry-over from Painting 1 exceed one short sentence or one compact clause
 - the main descriptive energy must prepare the eye and body for Painting 2
+- do not duplicate the session-arc explanation in two adjacent paragraphs
+- do not restate the same orientation instruction twice using different wording
+- if the arc paragraph is present, the painting-2 paragraph must move into image-specific bodily pressure rather than re-explaining the arc
 
 VARIABLES
 - Duration1 = viewing time of Painting 1
@@ -199,6 +215,13 @@ The language should suggest deepening and approach, not command.
 
 NOTE
 MON3 source content is still incomplete and must be finalized before implementation freeze.
+Until then, MON3 finalization must still produce a meaningful deepening pass rather than a factual cleanup only.
+If the only changes are title corrections, institution naming, or one closing word, the output is not final enough.
+MON3 should normally gain either:
+- stronger personal proximity from Alexander
+- a clearer handoff from painting 2 into painting 3
+- a more legible cathartic turn
+- or more embodied language around release, endurance, memory, or recovery
 
 MON4 — Finale · Synthesis
 

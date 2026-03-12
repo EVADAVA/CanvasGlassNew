@@ -18,7 +18,7 @@ Use Perplexity API as the search-layer reasoning and research model for candidat
 SEARCH LAYER (internal filtering — do not output this reasoning):
 - Source priority: infer tempo, density, atmosphere, emotional pressure, and continuity from `MUSIC_VECTOR`, `MOOD`, `PALETTE`, `SURFACE`, and `ENERGY_CURVE`
 - Arc model: session 1 = entry / openness, session 2 = pressure / deepening, session 3 = release / aftermath unless the PD texts strongly indicate a different shape
-- Playlist duration: target playlist duration must align to episode duration settings with enough material to sustain the full viewing window
+- Playlist duration: target playlist duration must align to episode duration settings with enough material to sustain the full viewing window; the final approved playlist must not be shorter than the episode total duration
 - Repetition control: avoid tracks already overused according to `tracks_registry` and project settings
 - Continuity: the playlist must feel authored as one hour, not shuffled from disconnected moods
 - Availability: prefer tracks that are realistically findable on Spotify and stable enough for playlist building

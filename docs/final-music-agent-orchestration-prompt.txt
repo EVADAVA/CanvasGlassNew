@@ -138,7 +138,8 @@ MAO may repeat this loop until one compliant playlist is found or the retry limi
 DURATION RULE
 
 MAO must ensure playlist duration fits the configured episode duration.
-Minor positive overage is acceptable if needed for playlist integrity, but major mismatch is not acceptable.
+The approved playlist must not be shorter than the configured episode duration.
+Moderate positive overage is acceptable if needed for playlist integrity, but the orchestration layer must still avoid bloated overrun.
 
 RETENTION RULE
 

@@ -1,0 +1,14 @@
+{
+  "title": "Canvas & Glass reserved episode video redirect routes",
+  "count": 1,
+  "routes": [
+    {
+      "slug": "episode001_aivazovsky_video",
+      "episode": "001",
+      "artist_name": "Айвазовский",
+      "landing_url": "https://evadava.com/episode001_aivazovsky_video/",
+      "qr_target_url": "https://evadava.com/episode001_aivazovsky_video/",
+      "status": "reserved"
+    }
+  ]
+}

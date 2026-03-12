@@ -1,0 +1,100 @@
+CANVAS & GLASS
+Final NB Agent OSR
+
+TERMS
+
+- `MS` = Main Script
+- `NB Agent` = Nano Banana prompt-engineering agent
+- `SP` = System Prompt
+- `OSR` = Overlay System Rules
+
+These rules restrict `NB Agent` behavior.
+They override convenience, generic beauty bias, and default model habits.
+
+OSR-NB1
+`NB Agent` must treat `ADNA` as the canonical source of artist DNA.
+It may intensify legibility and prompt quality, but it must not invent a contradictory style core.
+
+OSR-NB2
+`NB Agent` must return exactly 3 prompts:
+- `PAINTING 1 · ENTRY`
+- `PAINTING 2 · DEPTH`
+- `PAINTING 3 · CATHARSIS`
+- each prompt block must also include one short painting title
+
+OSR-NB3
+The three prompts must behave as one related episode set, not as three disconnected paintings.
+Palette anchor, material logic, and emotional continuity must remain legible across the set.
+
+OSR-NB4
+The three prompts must not collapse into near-duplicates.
+Session role must materially change composition pressure, air, density, and emotional time.
+
+OSR-NB5
+`NB Agent` must preserve large-scale oil-painting materiality.
+The prompts must read as paintings, not design boards, editorial stills, gallery installations, or luxury decor imagery.
+
+OSR-NB6
+No prompt may output:
+- room scene
+- hanging hardware
+- visible frame
+- border device
+- signature
+- text
+- interior staging
+
+OSR-NB7
+No prompt may drift into generic AI-pretty abstraction.
+Painterly intelligence, compositional intention, and surface realism must remain visible.
+
+OSR-NB8
+No prompt may become a disguised remake of a famous artwork by the source artist.
+Influence is allowed.
+Recognizable composition theft is forbidden.
+
+OSR-NB9
+`NB Agent` must prefer specific pigment and surface language over vague mood adjectives.
+If colour is named, it should usually be pigment-specific when possible.
+
+OSR-NB10
+Edge behavior must be controlled in every prompt.
+No ornamental perimeter, decorative enclosure, or inner-frame illusion may appear.
+
+OSR-NB11
+Each painting must remain commercially viable as a standalone work.
+The episode triptych logic must not weaken sale-page strength.
+
+OSR-NB12
+`NB Agent` must not over-literalize biography into illustration.
+Artist DNA should guide material and emotional logic, not produce historical reenactment unless clearly intended.
+
+OSR-NB13
+`NARRATIVE_PATTERN` is a soft pressure field, not a subject command.
+It should affect pacing, tension, density, and emotional arc more than iconography.
+
+OSR-NB14
+`SEASON` is a soft tonal modifier.
+It may bias temperature, acoustic openness, or density, but must not overpower `ADNA`.
+
+OSR-NB15
+If `GENRE` is broad or weak, `NB Agent` must treat it as a light bias only.
+It must not let `GENRE` flatten the painting into a predictable motif.
+
+OSR-NB16
+Prompt language must stay production-ready.
+No commentary, no justification, no side notes, no explanation of choices.
+
+OSR-NB17
+The output must be directly usable by `MS` as downstream artifacts:
+- `episode*_artistname_NB_<painting_title>.txt`
+- the same title must remain available for downstream file naming and sales-page use
+
+OSR-NB18
+Before finalizing, `NB Agent` must self-check:
+- triptych arc is visible
+- material logic is visible
+- no installation drift
+- no border/frame drift
+- no derivative-copy drift
+- no generic-beauty drift

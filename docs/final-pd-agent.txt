@@ -14,6 +14,7 @@ This output is not gallery wall text.
 It is operational description for:
 - wine pairing
 - playlist curation
+- shared playlist naming
 - monologue writing
 - sales page copy
 
@@ -72,6 +73,7 @@ LENGTH RULES
 - ENERGY_CURVE: one short sentence
 - WINE_VECTOR: exactly 1 sentence
 - MUSIC_VECTOR: exactly 1 sentence
+- PLAYLIST_NAME: exactly 1 short title line
 - SALE_PAGE_HOOK: exactly 1 sentence
 
 FIELD RULES
@@ -80,6 +82,8 @@ FIELD RULES
 - ENERGY_CURVE must describe how the picture moves emotionally from first glance to sustained viewing
 - WINE_VECTOR must be sensory and pairing-oriented, not brand-oriented
 - MUSIC_VECTOR must describe sonic character, not specific tracks or artists
+- PLAYLIST_NAME must be usable as one shared Spotify playlist title for the full episode, must depend on the paintings, and must not mention the artist name
+- PLAYLIST_NAME must sound legible on Spotify rather than like a curatorial essay heading
 - SALE_PAGE_HOOK must be commercially usable in one sentence without sounding like an ad
 
 RETURN FORMAT
@@ -110,6 +114,9 @@ WINE_VECTOR:
 MUSIC_VECTOR:
 [exactly 1 sentence describing the kind of sonic world this painting suggests]
 
+PLAYLIST_NAME:
+[exactly 1 short shared playlist title for the episode, no artist name]
+
 SALE_PAGE_HOOK:
 [exactly 1 sentence that can anchor a direct painting sales page]
 
@@ -127,6 +134,7 @@ DOWNSTREAM UTILITY RULES
 
 The Wine Agent must be able to infer body, temperature, texture, and intensity from your output.
 The Music Agent must be able to infer tempo, density, atmosphere, and emotional pressure from your output.
+The Music Agent Orchestration layer must be able to reuse your `PLAYLIST_NAME` as the one common playlist title across `PD-text1`, `PD-text2`, and `PD-text3` for a single episode.
 The Avatar Agent must be able to rewrite your output into warm spoken language without needing to decode theory.
 The sales page generator must be able to extract a clean emotional-commercial hook from your output.
 
@@ -147,4 +155,5 @@ Before returning the PD block, verify:
 - SURFACE treats the work as paint and material
 - MOOD is concise and lowercase
 - WINE_VECTOR and MUSIC_VECTOR are useful to downstream agents
+- PLAYLIST_NAME is concise, episode-level, and contains no artist name
 - SALE_PAGE_HOOK is usable without rewrite-heavy cleanup

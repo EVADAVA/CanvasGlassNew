@@ -39,6 +39,36 @@ This affects:
 - visual continuity
 - anti-repetition logic
 
+Pipeline Order
+
+Canonical order for one episode:
+1. `MS start`
+2. `ADNA Agent`
+3. `NB Agent`
+4. user generates or places 3 paintings
+5. `PD Agent`
+6. `Wine Agent`
+7. `Music / Playlist Agent`
+8. `Avatar Agent`
+9. stop before `HeyGen execution`
+10. `HeyGen` execution only after template readiness
+11. `Painting QR Agent`
+12. `Publisher Agent`
+13. `Render Maker Agent`
+14. publish
+15. mark artist `used`
+
+Operational rule:
+- do not skip forward if the previous layer has not produced its canonical output artifacts
+- for the current episode, the stop point before HeyGen is intentional
+- monologue filename state is canonical:
+- `*_draft.txt` = not final, not allowed into HeyGen prompts
+- `*_final.txt` = final Avatar output, allowed into HeyGen prompts
+- `*_draft_vs_final.diff` = visible content delta between local draft assembly and API-finalized monologue
+
+Skeleton reference:
+- [PIPELINE_SKELETON.md](/Users/akg/EVADAVA/CanvasGlassNew/PIPELINE_SKELETON.md)
+
 Agent Map
 
 Canonical agents currently in scope:
@@ -51,6 +81,28 @@ Canonical agents currently in scope:
 - `Avatar Agent`
 - `Publisher Agent`
 - `Render Maker Agent`
+
+NB Layer
+
+`NB Agent` is the prompt-engineering layer for Nano Banana.
+
+Canonical definition:
+- input: `Artist DNA` from `ADNA Agent`
+- output: `3 prompts` for `Nano Banana Pro / NB2`
+- each prompt receives a painting title before image generation
+- NB prompt filenames must include `Painting1/2/3` before the title slug
+- rules source:
+  - [docs/final-nb-prompt-agent.txt](/Users/akg/EVADAVA/CanvasGlassNew/docs/final-nb-prompt-agent.txt)
+  - [docs/final-nb-agent-osr.txt](/Users/akg/EVADAVA/CanvasGlassNew/docs/final-nb-agent-osr.txt)
+  - [docs/nb-engineering-prompt-agent.txt](/Users/akg/EVADAVA/CanvasGlassNew/docs/nb-engineering-prompt-agent.txt)
+
+Interpretation rule:
+- there is not a separate downstream `NB Prompt Engineering Agent`
+- `NB Agent` itself performs the prompt-engineering step and applies its `OSR`
+
+Main Script start rule:
+- `start [Artist Name]` must create or normalize the requested artist inside `ARTIST_POOL`
+- `start` must not fail only because the artist is missing from the pool
 
 Current prompt/spec files:
 - [docs/adna-agent-perplexity-system-prompt.txt](/Users/akg/EVADAVA/CanvasGlassNew/docs/adna-agent-perplexity-system-prompt.txt)
@@ -354,10 +406,22 @@ Approved cover logic:
 - fixed Bebas Neue typography
 - fixed logo placement in top-right
 - QR inside panel on the right
+- fixed text lines must be exactly:
+  - `IMMERSIVE WINE`
+  - `ART MEDITATION`
+  - `BY ALEXANDER KUGUK`
+  - `INSPIRED BY THE ART OF`
+  - `ARTIST NAME` as the 5th line, uppercase, visually dominant
+- do not improvise alternate copy on Spotify covers
 - output 3 cover options plus contact sheet preview
 
 Current logo source folder:
 - [logos](/Users/akg/EVADAVA/CanvasGlassNew/logos)
+
+Recovered canonical asset mapping:
+- original template expected `channel_logo_round_master.jpg`
+- current project fallback for that role:
+  - [Profile Mono.png](/Users/akg/EVADAVA/CanvasGlassNew/logos/Profile%20Mono.png)
 
 Spotify cover flow
 
@@ -412,21 +476,196 @@ Publisher normalization direction:
 Google Sheet Model
 
 Canonical tabs currently in scope:
-- `artists`
-- `episodes`
-- `tracks_registry`
-- `wine_registry`
-- `settings`
+- `ARTIST_POOL`
+- `EPISODES`
+- `Tracks`
+- `WINE_REGISTRY`
+- `AVATAR`
+- `AVATAR_REGISTRY`
+- `REDIRECT_REGISTRY`
+- `SETTINGS`
 
 Important settings keys currently in scope:
 - `duration_1_min`
 - `duration_2_min`
 - `duration_3_min`
+- `episode_id_padding`
+- `artist_pool_select_value`
+- `artist_pool_used_value`
 - `wine_repeat_kr`
 - `wine_repeat_history_depth`
 - `track_repeat_kr`
 - `track_repeat_history_depth`
+- `avatar_repeat_kr`
+- `avatar_repeat_history_depth`
 - `spotify_cover_count`
+- `redirect_public_domain`
+- `video_redirect_base_path`
+- `painting_redirect_base_path`
+- `playlist_redirect_base_path`
+- `redirect_slug_pattern`
+- `heygen_avatar_selection_mode`
+
+Current Google Sheet status
+
+Current production spreadsheet:
+- title: `CanvasGlass`
+- id: stored in the current schema-sync script
+- service account access confirmed
+
+Current live tabs found before schema sync:
+- `Tracks`
+- `ARTIST_POOL`
+- `EPISODES`
+- `SETTINGS`
+- `WINE_REGISTRY`
+- `GLASS_REGISTRY`
+- `DECANTER_REGISTRY`
+
+Required schema upgrades now approved:
+- `ARTIST_POOL` gains canonical selection fields:
+  - `artist_name`
+  - `artist_slug`
+  - `status`
+  - `used`
+  - `episode_id`
+  - `selected_at`
+  - `used_at`
+- `EPISODES` gains current episode orchestration fields:
+  - `input_dir`
+  - `output_dir`
+  - `playlist_name`
+  - `spotify_playlist_url`
+  - `playlist_redirect_url`
+  - `video_redirect_url`
+  - `painting1_redirect_url`
+  - `painting2_redirect_url`
+  - `painting3_redirect_url`
+  - `video_description_path`
+- `AVATAR` stores episode-level pattern/tone/avatar decisions
+- `AVATAR_REGISTRY` stores reusable HeyGen avatar ids mapped to `narrative_pattern_id`
+- `REDIRECT_REGISTRY` stores reserved public URLs for video and painting QR flows
+
+Artist Pool logic
+
+Canonical flow:
+1. `MS` reads `ARTIST_POOL`
+2. `MS` assigns `episode_id` using zero-padded mask `001`, `002`, `003` ...
+3. `MS` writes artist `status = selected`
+4. `MS` passes `AN` into `ADNA Agent`
+5. after publish, `status = used`
+
+Approved status values:
+- `selected`
+- `used`
+
+Avatar selection logic
+
+Approved model:
+- `Random Agent` selects `narrative_pattern_id`
+- `AAO` reads `AVATAR_REGISTRY`
+- `AVATAR_REGISTRY` maps `narrative_pattern_id -> avatar_id`
+- the chosen avatar remains fixed for the full episode across `MON1..MON4`
+
+Test seed approved for current work:
+- `Artist Name` = `Айвазовский`
+- `artist_slug` = `aivazovsky`
+- test `episode_id` = `001`
+
+Redirect structure
+
+Current approved canonical public redirect domain:
+- [https://evadava.com](https://evadava.com)
+
+Current approved redirect patterns:
+- episode video redirect:
+  - [https://evadava.com/episode001_aivazovsky_video/](https://evadava.com/episode001_aivazovsky_video/)
+- episode playlist redirect:
+  - [https://evadava.com/episode001_aivazovsky_playlist/](https://evadava.com/episode001_aivazovsky_playlist/)
+- painting redirects:
+  - [https://evadava.com/episode001_aivazovsky_painting1/](https://evadava.com/episode001_aivazovsky_painting1/)
+  - [https://evadava.com/episode001_aivazovsky_painting2/](https://evadava.com/episode001_aivazovsky_painting2/)
+  - [https://evadava.com/episode001_aivazovsky_painting3/](https://evadava.com/episode001_aivazovsky_painting3/)
+
+These must be stored in:
+- `REDIRECT_REGISTRY`
+
+Working sync tool:
+- [scripts/sync_google_sheet_schema.py](/Users/akg/EVADAVA/CanvasGlassNew/scripts/sync_google_sheet_schema.py)
+
+Current schema-sync result
+
+Applied to the live production spreadsheet:
+- created tab `AVATAR`
+- created tab `AVATAR_REGISTRY`
+- created tab `REDIRECT_REGISTRY`
+- added duration settings:
+  - `duration_1_min = 20`
+  - `duration_2_min = 20`
+  - `duration_3_min = 20`
+- added avatar repeat settings:
+  - `avatar_repeat_kr = 30`
+  - `avatar_repeat_history_depth = 10`
+- added redirect settings:
+  - `redirect_public_domain = evadava.com`
+  - `video_redirect_base_path = /`
+  - `painting_redirect_base_path = /`
+  - `playlist_redirect_base_path = /`
+  - `redirect_slug_pattern = episode{episode_id}_{artist_slug}_{entity_name}`
+- inserted test artist seed:
+  - `Айвазовский`
+
+Reserved canonical routes now stored in the live sheet:
+- [https://evadava.com/episode001_aivazovsky_video/](https://evadava.com/episode001_aivazovsky_video/)
+- [https://evadava.com/episode001_aivazovsky_playlist/](https://evadava.com/episode001_aivazovsky_playlist/)
+- [https://evadava.com/episode001_aivazovsky_painting1/](https://evadava.com/episode001_aivazovsky_painting1/)
+- [https://evadava.com/episode001_aivazovsky_painting2/](https://evadava.com/episode001_aivazovsky_painting2/)
+- [https://evadava.com/episode001_aivazovsky_painting3/](https://evadava.com/episode001_aivazovsky_painting3/)
+
+Deployment note:
+- `REDIRECT_REGISTRY` now treats these `evadava.com` URLs as canonical public addresses
+- actual root-level redirect activation on [https://evadava.com](https://evadava.com) still needs explicit infra wiring
+
+Folder structure
+
+Approved production filesystem rule:
+- input paintings go to:
+  - `input/episode001_aivazovsky/`
+- all generated episode outputs go to:
+  - `output/episode001_aivazovsky/`
+
+Approved output subfolders inside one episode folder:
+- `adna/`
+- `nb/`
+- `pd/`
+- `wine/`
+- `spotify/`
+- `monologues/draft/`
+- `monologues/final/`
+- `monologues/comparison/`
+- `heygen/`
+- `qr/`
+- `publish/`
+
+Approved naming direction:
+- `episode001_aivazovsky_ADNA-text.txt`
+- `episode001_aivazovsky_NB_Threshold_of_First_Light.txt`
+- `episode001_aivazovsky_PD-text1.txt`
+- `episode001_aivazovsky_painting1_wine1.txt`
+- `monologues/draft/episode001_aivazovsky_painting1_mon1_draft.txt`
+- `monologues/draft/episode001_aivazovsky_mon4_draft.txt`
+- `monologues/final/episode001_aivazovsky_painting1_mon1_final.txt`
+- `monologues/final/episode001_aivazovsky_mon4_final.txt`
+- `episode001_aivazovsky_videodescription.txt`
+
+Current bootstrap state
+
+- `MS start` entrypoint:
+  - [scripts/start_episode.py](/Users/akg/EVADAVA/CanvasGlassNew/scripts/start_episode.py)
+- current locked episode:
+  - `episode001_aivazovsky`
+- current episode manifest:
+  - [episode001_aivazovsky_start-manifest.json](/Users/akg/EVADAVA/CanvasGlassNew/output/episode001_aivazovsky/publish/episode001_aivazovsky_start-manifest.json)
 
 Spotify Integration Status
 

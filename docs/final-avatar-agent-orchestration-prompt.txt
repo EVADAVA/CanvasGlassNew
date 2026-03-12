@@ -98,6 +98,23 @@ For one episode, AAO must:
 10. return the approved monologue set to `MS`
 11. write the accepted avatar pattern package into Google Sheet `Avatar`
 
+FINALIZATION STANDARD
+
+AAO must treat Anthropic output as a real finalization pass, not a cosmetic proofreading pass.
+
+Accepted final output must do at least one of the following in a meaningful way:
+- improve spoken flow
+- reduce modularity
+- sharpen sensory language
+- strengthen transitions
+- deepen personal or bodily presence
+
+AAO must reject outputs where the model only:
+- swaps one proper noun
+- adds one decorative sentence
+- changes isolated wording without improving movement
+- preserves draft structure so literally that the final feels unprocessed
+
 NARRATIVE PATTERN RULE
 
 AAO must choose exactly one base narrative pattern for the full episode.
@@ -153,12 +170,14 @@ EXECUTION LAYER
 After AAO finalizes the pattern package, it sends the monologue input package to the Avatar Agent SP through Anthropic API.
 
 Anthropic API output:
-- `mon1`
-- `mon2`
-- `mon3`
-- `mon4`
+- `mon1_final`
+- `mon2_final`
+- `mon3_final`
+- `mon4_final`
 
 Those outputs are not final until they pass OSR checks.
+Any pre-OSR or pre-approval monologue file must be stored as `*_draft.txt` and must not be treated as a HeyGen prompt input.
+If AAO sees that a `*_final.txt` differs from draft only cosmetically, AAO must force a repair pass before approval.
 
 OUTPUT TO MS
 
@@ -171,10 +190,10 @@ AAO returns exactly:
 - `monologue_3_tone_variant`
 - `monologue_4_tone_variant`
 - `monologue_4_closing_mode`
-- `mon1`
-- `mon2`
-- `mon3`
-- `mon4`
+- `mon1_final`
+- `mon2_final`
+- `mon3_final`
+- `mon4_final`
 
 AVATAR SHEET WRITEBACK
 

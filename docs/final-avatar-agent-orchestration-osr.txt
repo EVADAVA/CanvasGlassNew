@@ -28,6 +28,8 @@ AAO must reject a pattern package that violates `avatar_repeat_kr` within `avata
 
 OSR-A6
 The Avatar Agent execution layer must run through Anthropic API, but Anthropic output is not final until OSR validation passes.
+No `*_draft.txt` monologue may be forwarded into HeyGen prompts.
+Only `*_final.txt` monologues may enter the HeyGen handoff layer.
 
 OSR-A7
 Monologues must feel human-spoken, not templated, not database-written, and not stitched from visible placeholders.
@@ -103,6 +105,9 @@ AAO must reject outputs where required variables remain technically present but 
 HR-5
 The final voice must preserve warmth, breath, and spoken plausibility even when the selected pattern is intellectually dense or formally restrained.
 
+HR-6
+AAO must reject a supposed final pass if it differs from draft only through superficial edits that do not materially improve spoken experience.
+
 BRAIDING RULES
 
 BR-1
@@ -131,6 +136,9 @@ AAO must reject outputs where monologue logic is visibly sequential in a checkli
 - playlist
 - wine
 
+BR-6
+AAO must reject outputs where two adjacent paragraphs perform the same rhetorical job with only light wording changes.
+
 BLOCK FUSION RULES
 
 BFR-1
@@ -147,6 +155,31 @@ The two biography facts, painting description, wine recommendation, playlist men
 
 BFR-5
 If a monologue becomes more stylish but less legible in its required content, AAO must force a repair pass.
+
+MON2 DUPLICATION RULES
+
+M2-1
+AAO must reject MON2 if the session-arc paragraph and the painting-2 orientation paragraph substantially repeat each other.
+
+M2-2
+AAO must reject MON2 if image-specific bodily pressure is underdeveloped because generalized orientation language takes too much space.
+
+M2-3
+If MON2 contains both an arc paragraph and an eye-adjustment paragraph, their functions must be distinct:
+- one defines the arc
+- one enters the actual second painting
+
+MON3 DEPTH RULES
+
+M3-1
+AAO must reject MON3 if finalization only performs factual correction and does not deepen the monologue's emotional or bodily movement.
+
+M3-2
+MON3 final output should normally add at least one meaningful layer beyond the draft:
+- more intimate self-implication from Alexander
+- a clearer approach into the third painting
+- a stronger cathartic turn
+- or more embodied release language
 
 PATTERN FILTER RULES
 

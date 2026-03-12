@@ -33,21 +33,35 @@ OUTPUT
 Return exactly three prompts in sequence:
 
 PAINTING 1 · ENTRY
+TITLE: [short painting title]
+PROMPT:
 [prompt]
 
 ---
 
 PAINTING 2 · DEPTH
+TITLE: [short painting title]
+PROMPT:
 [prompt]
 
 ---
 
 PAINTING 3 · CATHARSIS
+TITLE: [short painting title]
+PROMPT:
 [prompt]
 
 No commentary.
 No explanation.
 No extra notes.
+
+TITLE RULES
+
+- every painting must receive its own title before image generation
+- titles must be concise and sale-page usable
+- titles must not mention the artist name
+- titles must not sound generic, placeholder-like, or mechanically sequential
+- titles should emerge from the painting logic and triptych role, not from biography summary
 
 OVERLAY MASTER RULES
 

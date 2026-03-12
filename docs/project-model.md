@@ -37,49 +37,70 @@ All filesystem paths must use `artist_slug`, not raw `artist_name`.
 2. `Script` reads Google Sheet registry and picks the next artist.
 3. `Script` creates episode workspace for that artist.
 4. `ADNA Agent` generates `ADNA-text` and 6 biography facts.
-5. `NB Agent` generates 3 Nano Banana prompts.
-6. `Script` pauses and waits for 3 paintings in the artist input folder.
-7. `Painting Describer Agent` generates `PD-text-1..3`.
-8. `Wine Agent` generates 3 wine recommendations.
-9. `Music Agent` creates Spotify playlist, 3 cover options, playlist URL, and playlist QR.
-10. `Avatar Agent` generates 4 monologues.
-11. `Publisher Agent` prepares the YouTube publication package.
-12. `Script` asks for confirmation before render.
-13. `Script` renders the final 60-minute video.
-14. `Script` publishes the video to YouTube private state.
+5. `NB Agent` receives `Artist DNA` and performs the Nano Banana prompt-engineering step under its `OSR`.
+6. `NB Agent` outputs 3 prompts for `Nano Banana Pro / NB2`, each with a pre-generation painting title.
+7. `Script` pauses and waits for 3 paintings in the episode input folder.
+8. `Painting Describer Agent` generates `PD-text-1..3`.
+9. `Wine Agent` generates 3 wine recommendations.
+10. `Music Agent` creates Spotify playlist, 3 cover options, playlist URL, and playlist QR.
+11. `Avatar Agent` generates 4 monologues.
+12. `Publisher Agent` prepares the YouTube publication package.
+13. `Script` asks for confirmation before render.
+14. `Script` renders the final 60-minute video.
+15. `Script` publishes the video to YouTube private state.
 
 ## Episode Folder Layout
 
 ```text
-episodes/
-  {artist_slug}/
-    input/
-      painting-1.jpg
-      painting-2.jpg
-      painting-3.jpg
-    output/
-      adna.txt
-      nb-prompt-1.txt
-      nb-prompt-2.txt
-      nb-prompt-3.txt
-      pd-text-1.txt
-      pd-text-2.txt
-      pd-text-3.txt
-      monologue-1.txt
-      monologue-2.txt
-      monologue-3.txt
-      monologue-4.txt
-      TYDescription.txt
-    assets/
-      qr-playlist.png
-      qr-painting-1.png
-      qr-painting-2.png
-      qr-painting-3.png
-      cover-1.png
-      cover-2.png
-      cover-3.png
-    render/
-      final-video.mp4
+input/
+  episode001_aivazovsky/
+    painting1.jpg
+    painting2.jpg
+    painting3.jpg
+
+output/
+  episode001_aivazovsky/
+    adna/
+      episode001_aivazovsky_ADNA-text.txt
+    nb/
+      episode001_aivazovsky_NB_Painting1_Threshold_of_First_Light.txt
+      episode001_aivazovsky_NB_Painting2_Sea_Under_Pressure.txt
+      episode001_aivazovsky_NB_Painting3_After_the_Squall_Light.txt
+    pd/
+      episode001_aivazovsky_PD-text1.txt
+      episode001_aivazovsky_PD-text2.txt
+      episode001_aivazovsky_PD-text3.txt
+    wine/
+      episode001_aivazovsky_painting1_wine1.txt
+      episode001_aivazovsky_painting2_wine2.txt
+      episode001_aivazovsky_painting3_wine3.txt
+    spotify/
+      episode001_aivazovsky_playlist.txt
+      episode001_aivazovsky_playlist_cover_final.jpg
+      episode001_aivazovsky_playlist_qr.png
+    monologues/
+      comparison/
+        episode001_aivazovsky_painting1_mon1_draft_vs_final.diff
+        episode001_aivazovsky_painting2_mon2_draft_vs_final.diff
+        episode001_aivazovsky_painting3_mon3_draft_vs_final.diff
+        episode001_aivazovsky_mon4_draft_vs_final.diff
+      draft/
+        episode001_aivazovsky_painting1_mon1_draft.txt
+        episode001_aivazovsky_painting2_mon2_draft.txt
+        episode001_aivazovsky_painting3_mon3_draft.txt
+        episode001_aivazovsky_mon4_draft.txt
+      final/
+        episode001_aivazovsky_painting1_mon1_final.txt
+        episode001_aivazovsky_painting2_mon2_final.txt
+        episode001_aivazovsky_painting3_mon3_final.txt
+        episode001_aivazovsky_mon4_final.txt
+    heygen/
+    qr/
+      episode001_aivazovsky_painting1_qr.png
+      episode001_aivazovsky_painting2_qr.png
+      episode001_aivazovsky_painting3_qr.png
+    publish/
+      episode001_aivazovsky_videodescription.txt
 ```
 
 ## Episode Status Model
@@ -135,6 +156,11 @@ episodes/
 - `awaiting_paintings -> paintings_ready` only after all 3 painting files are present
 - `playlist_ready -> awaiting_cover_selection` is mandatory if more than one cover option exists
 - `awaiting_cover_selection -> cover_selected` only after explicit user choice
+- monologue files must encode state in filename:
+  - `*_draft.txt` = assembled or prompt-ready text, not allowed into HeyGen prompts
+  - `*_final.txt` = API-finalized Avatar output, allowed into HeyGen prompts
+- monologue comparison files live in `monologues/comparison/`
+  - `*_draft_vs_final.diff` = unified diff between locally assembled draft and API-finalized monologue
 - `youtube_package_ready -> ready_for_render` only after all required assets are present
 - `ready_for_render -> rendering` only after explicit user confirmation
 - `rendered -> awaiting_publish_confirmation` is mandatory
@@ -148,14 +174,16 @@ Google Sheet is the canonical operational registry for artist selection, episode
 
 ### Required Tabs
 
-- `artists`
-- `episodes`
-- `tracks_registry`
-- `wine_registry`
-- `avatar`
-- `settings`
+- `ARTIST_POOL`
+- `EPISODES`
+- `Tracks`
+- `WINE_REGISTRY`
+- `AVATAR`
+- `AVATAR_REGISTRY`
+- `REDIRECT_REGISTRY`
+- `SETTINGS`
 
-### Tab: `artists`
+### Tab: `ARTIST_POOL`
 
 Purpose:
 - source queue for `Artist Name`
@@ -165,18 +193,25 @@ Purpose:
 Required columns:
 - `artist_name`
 - `artist_slug`
-- `queue_order`
-- `is_used`
-- `used_episode_id`
+- `category`
+- `status`
+- `used`
+- `processed`
+- `episode_id`
+- `selected_at`
 - `used_at`
+- `last_episode`
 - `notes`
 
 Script responsibilities:
-- read the next unused artist by `queue_order`
+- read the next artist that is not already locked by `selected` or finalized as `used`
+- if the requested artist does not yet exist, create and normalize the artist row during `start`
 - derive or verify `artist_slug`
-- mark the artist as used only after successful episode creation or according to final business rule
+- assign `episode_id` using zero-padded mask `001`, `002`, `003` ...
+- write `status = selected` when an episode starts
+- write `status = used` only after successful publication
 
-### Tab: `episodes`
+### Tab: `EPISODES`
 
 Purpose:
 - registry of all episode runs
@@ -184,29 +219,38 @@ Purpose:
 
 Required columns:
 - `episode_id`
+- `episode_slug`
 - `artist_name`
 - `artist_slug`
+- `artist_pool_status`
 - `episode_status`
-- `started_at`
-- `updated_at`
-- `finished_at`
 - `input_dir`
 - `output_dir`
-- `assets_dir`
-- `render_dir`
+- `playlist_name`
 - `spotify_playlist_url`
+- `spotify_cover_url`
+- `spotify_qr_path`
+- `video_redirect_url`
+- `playlist_redirect_url`
+- `painting1_redirect_url`
+- `painting2_redirect_url`
+- `painting3_redirect_url`
 - `youtube_video_url`
 - `youtube_video_id`
-- `error_message`
-- `operator_notes`
+- `video_description_path`
+- `created_at`
+- `updated_at`
+- `published_at`
+- `error`
 
 Script responsibilities:
 - create one row per episode
 - update `episode_status` on every state transition
+- persist the episode-level `playlist_name` generated from the 3 paintings and reused by Spotify
 - store final YouTube URL and video ID after successful publish
 - write `error_message` on failure
 
-### Tab: `tracks_registry`
+### Tab: `Tracks`
 
 Purpose:
 - prevent repeated use of the same Spotify tracks across episodes
@@ -215,18 +259,20 @@ Purpose:
 Required columns:
 - `spotify_track_id`
 - `track_name`
-- `artist_name`
+- `track_artist`
 - `album_name`
+- `spotify_playlist_id`
+- `spotify_playlist_name`
 - `used_episode_id`
 - `used_artist_slug`
+- `session_index`
 - `used_at`
-- `spotify_playlist_id`
 
 Script responsibilities:
 - check candidate tracks against this registry before playlist creation
 - record all selected playlist tracks after playlist creation
 
-### Tab: `wine_registry`
+### Tab: `WINE_REGISTRY`
 
 Purpose:
 - store all 3 wine recommendations for each episode
@@ -234,25 +280,26 @@ Purpose:
 - support later reuse rules if wine repetition should be limited
 
 Required columns:
-- `episode`
+- `episode_id`
 - `artist_name`
+- `artist_slug`
 - `wine1`
-- `wine2`
-- `wine3`
 - `wine1_description`
-- `wine2_description`
-- `wine3_description`
 - `wine1_type`
-- `wine2_type`
-- `wine3_type`
 - `wine1_region`
-- `wine2_region`
-- `wine3_region`
 - `wine1_producer`
-- `wine2_producer`
-- `wine3_producer`
 - `wine1_normalized_key`
+- `wine2`
+- `wine2_description`
+- `wine2_type`
+- `wine2_region`
+- `wine2_producer`
 - `wine2_normalized_key`
+- `wine3`
+- `wine3_description`
+- `wine3_type`
+- `wine3_region`
+- `wine3_producer`
 - `wine3_normalized_key`
 - `recorded_at`
 
@@ -262,7 +309,7 @@ Script responsibilities:
 - store all 3 final wine recommendations in the same row for downstream retrieval
 - preserve normalized helper fields so WAO can enforce anti-repeat logic reliably
 
-### Tab: `avatar`
+### Tab: `AVATAR`
 
 Purpose:
 - store episode-level narrative pattern decisions
@@ -270,10 +317,14 @@ Purpose:
 - support anti-repetition rules for the Avatar layer
 
 Required columns:
-- `episode`
+- `episode_id`
 - `artist_name`
+- `artist_slug`
 - `narrative_pattern_id`
 - `narrative_pattern_name`
+- `avatar_registry_id`
+- `avatar_id`
+- `avatar_name`
 - `mon1_tone_variant`
 - `mon2_tone_variant`
 - `mon3_tone_variant`
@@ -282,11 +333,58 @@ Required columns:
 - `recorded_at`
 
 Script responsibilities:
-- append exactly 1 avatar row per completed monologue-generation step
+- append exactly 1 avatar row per completed episode-level avatar decision
 - keep one row per episode
-- preserve pattern and tone-path history so AAO can enforce anti-repeat logic reliably
+- preserve pattern, avatar, and tone-path history so AAO can enforce anti-repeat logic reliably
 
-### Tab: `settings`
+### Tab: `AVATAR_REGISTRY`
+
+Purpose:
+- map available HeyGen avatar ids to `narrative_pattern_id`
+- make avatar selection deterministic after Random Agent chooses the episode pattern
+
+Required columns:
+- `avatar_registry_id`
+- `avatar_id`
+- `avatar_name`
+- `avatar_type`
+- `narrative_pattern_id`
+- `narrative_pattern_name`
+- `default_voice_id`
+- `is_active`
+- `notes`
+
+Script responsibilities:
+- read one active avatar mapping for the chosen `narrative_pattern_id`
+- pass the same avatar choice through `MON1..MON4` for the full episode
+
+### Tab: `REDIRECT_REGISTRY`
+
+Purpose:
+- reserve stable public URLs before final landing targets exist
+- store video, playlist, and painting redirect routes used by QR generation
+
+Required columns:
+- `episode_id`
+- `artist_name`
+- `artist_slug`
+- `redirect_type`
+- `entity_name`
+- `redirect_key`
+- `public_url`
+- `target_url`
+- `status`
+- `recorded_at`
+- `notes`
+
+Approved test redirects:
+- `https://evadava.com/episode001_aivazovsky_video/`
+- `https://evadava.com/episode001_aivazovsky_playlist/`
+- `https://evadava.com/episode001_aivazovsky_painting1/`
+- `https://evadava.com/episode001_aivazovsky_painting2/`
+- `https://evadava.com/episode001_aivazovsky_painting3/`
+
+### Tab: `SETTINGS`
 
 Purpose:
 - store runtime settings and reusable project configuration
@@ -294,23 +392,29 @@ Purpose:
 Required columns:
 - `key`
 - `value`
-- `scope`
-- `notes`
+- `description`
 
 Expected setting keys:
-- `episodes_root_dir`
-- `default_asmr_audio_path`
-- `youtube_privacy_default`
-- `default_video_duration_seconds`
+- `duration_1_min`
+- `duration_2_min`
+- `duration_3_min`
+- `episode_id_padding`
+- `artist_pool_sheet`
+- `artist_pool_select_value`
+- `artist_pool_used_value`
 - `spotify_cover_count`
-- `painting_expected_count`
-- `telegram_admin_chat_id`
 - `wine_repeat_kr`
 - `wine_repeat_history_depth`
 - `track_repeat_kr`
 - `track_repeat_history_depth`
 - `avatar_repeat_kr`
 - `avatar_repeat_history_depth`
+- `redirect_public_domain`
+- `video_redirect_base_path`
+- `painting_redirect_base_path`
+- `playlist_redirect_base_path`
+- `redirect_slug_pattern`
+- `heygen_avatar_selection_mode`
 
 Script responsibilities:
 - read settings at startup
@@ -321,11 +425,12 @@ Script responsibilities:
 When Telegram starts a new run:
 
 1. read `settings`
-2. read `artists`
-3. select the first row where `is_used = false`
+2. read `ARTIST_POOL`
+3. select the next artist not already in terminal `used` state
 4. create `episode_id`
-5. create episode folder tree
-6. insert new row in `episodes`
+5. set artist `status = selected`
+6. create episode folder tree
+7. insert new row in `EPISODES`
 7. continue processing
 
 ### Recommended Update Rule
@@ -339,11 +444,11 @@ At every major step, Script updates the matching row in `episodes`:
 
 At successful completion:
 
-- set `artists.is_used = true`
-- write `artists.used_episode_id`
-- write `artists.used_at`
-- append used tracks to `tracks_registry`
-- append wine recommendations to `wine_registry`
+- set `ARTIST_POOL.status = used`
+- write `ARTIST_POOL.used = 1`
+- write `ARTIST_POOL.used_at`
+- append used tracks to `Tracks`
+- append wine recommendations to `WINE_REGISTRY`
 
 ## Communication Layer Contract
 
@@ -904,6 +1009,7 @@ Inputs:
 - `pd_text_1`
 - `pd_text_2`
 - `pd_text_3`
+- `playlist_name`
 
 Selection priority:
 - ADNA emotional register
@@ -1009,7 +1115,7 @@ Current readiness:
 ### NB Agent
 
 - input: `adna_text`, `narrative_pattern`, `season`, optional `genre`
-- output: `nb_prompt_1..3`
+- output: `nb_prompt_1..3`, `painting_title_1..3`
 
 ### Painting Describer Agent
 
@@ -1188,6 +1294,7 @@ If any rendered monologue crosses into a forbidden overlap zone, the system shou
 ### Playlist
 
 - `spotify_playlist_id`
+- `playlist_name`
 - `spotify_playlist_name`
 - `spotify_playlist_url`
 - `spotify_track_list`
@@ -1260,6 +1367,7 @@ These are produced by agents or Script logic.
 - `wine_1_*`
 - `wine_2_*`
 - `wine_3_*`
+- `playlist_name`
 - `spotify_playlist_id`
 - `spotify_playlist_name`
 - `spotify_playlist_url`
