@@ -22,6 +22,7 @@ SHEET_ID = "1ydqWqciQIQSKDCmp7jzvC0q04w_MP_e6ST9VENdHpew"
 ARTIST_POOL_SHEET = "ARTIST_POOL"
 EPISODES_SHEET = "EPISODES"
 TRACKS_SHEET = "Tracks"
+TRACK_PROBLEMS_SHEET = "TRACK_PROBLEMS"
 SETTINGS_SHEET = "SETTINGS"
 WINE_REGISTRY_SHEET = "WINE_REGISTRY"
 AVATAR_SHEET = "AVATAR"
@@ -81,6 +82,17 @@ TRACKS_HEADERS = [
     "used_artist_slug",
     "session_index",
     "used_at",
+]
+
+TRACK_PROBLEMS_HEADERS = [
+    "track_key",
+    "track_name",
+    "track_artist",
+    "reason",
+    "source_stage",
+    "is_active",
+    "recorded_at",
+    "notes",
 ]
 
 WINE_REGISTRY_HEADERS = [
@@ -185,6 +197,69 @@ NARRATIVE_PATTERNS = [
     ("03", "THE DOUBLE AGENT"),
     ("04", "THE LITURGIST"),
     ("05", "THE WITNESS OF TRANSFORMATION"),
+]
+
+TRACK_PROBLEMS_DEFAULTS = [
+    [
+        "arvo pärt - spiegel im spiegel",
+        "Spiegel im Spiegel",
+        "Arvo Pärt",
+        "duration_out_of_range",
+        "spotify_publish",
+        "1",
+        "",
+        "Rejected for playlist publishing under current Canvas & Glass constraints.",
+    ],
+    [
+        "nils frahm - says",
+        "Says",
+        "Nils Frahm",
+        "duration_out_of_range",
+        "spotify_publish",
+        "1",
+        "",
+        "Rejected for playlist publishing under current Canvas & Glass constraints.",
+    ],
+    [
+        "tigran hamasyan - markos and maro",
+        "Markos and Maro",
+        "Tigran Hamasyan",
+        "track_not_found_or_mismatch",
+        "spotify_publish",
+        "1",
+        "",
+        "The planned title mismatched Spotify inventory and should not be reused.",
+    ],
+    [
+        "christian löffler - haul",
+        "Haul",
+        "Christian Löffler",
+        "duration_out_of_range",
+        "spotify_publish",
+        "1",
+        "",
+        "Rejected for playlist publishing under current Canvas & Glass constraints.",
+    ],
+    [
+        "max richter - on the nature of daylight",
+        "On the Nature of Daylight",
+        "Max Richter",
+        "duration_out_of_range",
+        "spotify_publish",
+        "1",
+        "",
+        "Rejected for playlist publishing under current Canvas & Glass constraints.",
+    ],
+    [
+        "ludovico einaudi - nuvole bianche",
+        "Nuvole Bianche",
+        "Ludovico Einaudi",
+        "duration_out_of_range",
+        "spotify_publish",
+        "1",
+        "",
+        "Rejected for playlist publishing under current Canvas & Glass constraints.",
+    ],
 ]
 
 
@@ -326,6 +401,22 @@ def ensure_settings(token: str) -> None:
         update_values(token, f"{SETTINGS_SHEET}!A:C", values)
 
 
+def ensure_track_problems_seed(token: str) -> None:
+    ensure_sheet_with_headers(token, TRACK_PROBLEMS_SHEET, TRACK_PROBLEMS_HEADERS)
+    rows = get_values(token, f"{TRACK_PROBLEMS_SHEET}!A:H")
+    existing = {row[0].strip().lower() for row in rows[1:] if row and row[0].strip()}
+    to_append: list[list[str]] = []
+    for row in TRACK_PROBLEMS_DEFAULTS:
+        key = row[0].strip().lower()
+        if key in existing:
+            continue
+        seeded = row[:]
+        seeded[6] = now_iso()
+        to_append.append(seeded)
+    if to_append:
+        append_values(token, f"{TRACK_PROBLEMS_SHEET}!A:H", to_append)
+
+
 def ensure_avatar_registry_seed(token: str) -> None:
     ensure_sheet_with_headers(token, AVATAR_REGISTRY_SHEET, AVATAR_REGISTRY_HEADERS)
     rows = get_values(token, f"{AVATAR_REGISTRY_SHEET}!A:I")
@@ -374,6 +465,7 @@ def main() -> None:
         (ARTIST_POOL_SHEET, ARTIST_POOL_HEADERS),
         (EPISODES_SHEET, EPISODES_HEADERS),
         (TRACKS_SHEET, TRACKS_HEADERS),
+        (TRACK_PROBLEMS_SHEET, TRACK_PROBLEMS_HEADERS),
         (SETTINGS_SHEET, SETTINGS_HEADERS),
         (WINE_REGISTRY_SHEET, WINE_REGISTRY_HEADERS),
         (AVATAR_SHEET, AVATAR_HEADERS),
@@ -395,6 +487,7 @@ def main() -> None:
     for title, headers in plan:
         ensure_sheet_with_headers(token, title, headers)
     ensure_settings(token)
+    ensure_track_problems_seed(token)
     ensure_avatar_registry_seed(token)
     ensure_redirect_registry_seed(token)
     ensure_artist_pool_seed(token)

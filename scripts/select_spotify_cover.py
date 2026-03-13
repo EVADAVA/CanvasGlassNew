@@ -124,7 +124,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Select one Spotify cover option, upload it, and clean up the rest.")
     parser.add_argument("--episode-slug", required=True)
     parser.add_argument("--episode-id", required=True)
-    parser.add_argument("--playlist-id", required=True)
+    parser.add_argument("--playlist-id", default="")
     parser.add_argument("--option", type=int, choices=[1, 2, 3], required=True)
     return parser.parse_args()
 
@@ -134,16 +134,18 @@ def main() -> None:
     spotify_dir = ROOT / "output" / args.episode_slug / "spotify"
     final_cover = spotify_dir / f"{args.episode_slug}_spotify_cover_final.jpg"
 
-    creds = load_env_file(CREDS_PATH)
-    tokens = load_tokens()
-    access_token = refresh_access_token(
-        creds["SPOTIFY_CLIENT_ID"],
-        creds["SPOTIFY_CLIENT_SECRET"],
-        tokens["refresh_token"],
-    )
-
     cleanup_variants(spotify_dir, args.option, final_cover)
-    upload_playlist_cover(args.playlist_id, final_cover, access_token)
+    playlist_url = ""
+    if args.playlist_id:
+        creds = load_env_file(CREDS_PATH)
+        tokens = load_tokens()
+        access_token = refresh_access_token(
+            creds["SPOTIFY_CLIENT_ID"],
+            creds["SPOTIFY_CLIENT_SECRET"],
+            tokens["refresh_token"],
+        )
+        upload_playlist_cover(args.playlist_id, final_cover, access_token)
+        playlist_url = fetch_playlist_url(args.playlist_id, access_token)
 
     update_episode_row(args.episode_id, final_cover)
     update_manifest(args.episode_slug, final_cover)
@@ -151,7 +153,8 @@ def main() -> None:
     update_playlist_package(package, final_cover)
 
     print(final_cover)
-    print(fetch_playlist_url(args.playlist_id, access_token))
+    if playlist_url:
+        print(playlist_url)
 
 
 if __name__ == "__main__":

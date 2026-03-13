@@ -14,9 +14,10 @@ Canonical order for one episode:
 10. `HeyGen` execution only through manual operator submission
 11. `Painting QR Agent`
 12. `Publisher Agent`
-13. `Render Maker Agent`
-14. publish
-15. mark artist `used`
+13. in `test` mode stop at `youtube_package_ready`
+14. in `start` mode continue to `Render Maker Agent`
+15. publish
+16. mark artist `used`
 
 Operational rule:
 - do not skip forward if the previous layer has not produced its canonical output artifacts

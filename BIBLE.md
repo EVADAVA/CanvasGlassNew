@@ -39,6 +39,18 @@ This affects:
 - visual continuity
 - anti-repetition logic
 
+Runtime modes
+
+- `test [Artist Name]`
+  - creates a test run
+  - does not consume a production episode number
+  - target finish is `youtube_package_ready`
+  - render is skipped in test mode
+- `start [Artist Name]`
+  - creates a release run
+  - consumes the next production episode number
+  - continues past the YouTube package into render and publish layers
+
 Pipeline Order
 
 Canonical order for one episode:
@@ -54,9 +66,10 @@ Canonical order for one episode:
 10. `HeyGen` execution only after template readiness
 11. `Painting QR Agent`
 12. `Publisher Agent`
-13. `Render Maker Agent`
-14. publish
-15. mark artist `used`
+13. in `test` mode stop at `youtube_package_ready`
+14. in `start` mode continue to `Render Maker Agent`
+15. publish
+16. mark artist `used`
 
 Operational rule:
 - do not skip forward if the previous layer has not produced its canonical output artifacts
@@ -144,7 +157,7 @@ Meditation flow canon:
 - `MON2` = `[20:00]` reset / painting 2 / exactly 2 ADNA sensory facts / response logic
 - `MON3` = `[40:00]` philosophical catharsis / philosophical anchor / wine aftertaste evolution
 - `MON4` = `[60:00]` return / gratitude / back-to-reality bridge / QR prints-or-originals CTA
-- target length per monologue = `180–250 words`
+- target length per monologue = `up to 500 words`
 
 Current narrative-pattern source:
 - [docs/final-avatar-narrative-patterns.txt](/Users/akg/EVADAVA/CanvasGlassNew/docs/final-avatar-narrative-patterns.txt)
@@ -867,10 +880,14 @@ Rules for this Bible
 
 Current run state
 
-- no active run is part of canon right now
-- system should be treated as ready for a fresh command:
-  - `test [Artist Name]`
-  - `start [Artist Name]`
+- active test run:
+  - `test_matthieu_delfini`
+- current verified stage:
+  - `heygen_prompt_ready_not_sent`
+- current verified selected narrative pattern:
+  - `04 · THE LITURGIST`
+- current verified published Spotify playlist:
+  - [Floating in Open Water](https://open.spotify.com/playlist/5ZoQSvUH50zYW8xDLJug2H)
 
 Current HeyGen template findings
 
@@ -890,3 +907,38 @@ Current HeyGen template findings
   - `SENS` test render video id: `8823857394234048a7848fa5baf71a57`
   - `SENS_R` test render video id: `0d7ad3f9f14a4f218203196f90666465`
   - `SENSV` test render video id: `61171d2bb97c4a97945ab4b48bc66471`
+
+Current web orchestration notes
+
+- chat commands are now:
+  - `test`
+  - `start`
+- web studio is where `Artist Name` is entered and run state is monitored
+- human-loop controls currently implemented in web:
+  - `Paintings are placed`
+  - Spotify cover selection (`Select cover 1/2/3`)
+  - `Monologues are placed`
+- after `Paintings are placed`, backend continuation now runs:
+  - `PD`
+  - `Wine`
+  - `Playlist package`
+  - Spotify cover option generation
+- after cover selection, backend continuation now runs:
+  - `Avatar drafts`
+  - `Avatar final monologues`
+  - `HeyGen prompts`
+- after `Monologues are placed`, test mode continues to:
+  - `YouTube package`
+
+Track blacklist
+
+- a dedicated Google Sheet tab now exists:
+  - `TRACK_PROBLEMS`
+- Spotify publishing now consults this registry and blocks listed tracks from reuse
+- seeded problem tracks include:
+  - `Arvo Pärt - Spiegel im Spiegel`
+  - `Nils Frahm - Says`
+  - `Tigran Hamasyan - Markos and Maro`
+  - `Christian Löffler - Haul`
+  - `Max Richter - On the Nature of Daylight`
+  - `Ludovico Einaudi - Nuvole Bianche`

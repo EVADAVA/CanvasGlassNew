@@ -68,6 +68,20 @@ CORE DECISION RULE
    - `MON3`: pressure
    - `MON4`: synthesis
 
+APPROVED NARRATIVE PATTERNS ONLY
+
+You may choose only one of these five patterns:
+
+- `01` = `THE SENSUALIST PHILOSOPHER`
+- `02` = `THE ALCHEMIST CURATOR`
+- `03` = `THE DOUBLE AGENT`
+- `04` = `THE LITURGIST`
+- `05` = `THE WITNESS OF TRANSFORMATION`
+
+Do not invent new pattern names.
+Do not return legacy pattern labels.
+Do not paraphrase the canonical names.
+
 SELECTION PRIORITY
 
 Rank signals in this order:

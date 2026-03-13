@@ -5,11 +5,12 @@ import argparse
 import base64
 import json
 import re
+import time
 import urllib.parse
 import urllib.request
 from pathlib import Path
 
-from sync_google_sheet_schema import get_token as get_gsheets_token
+from sync_google_sheet_schema import TRACK_PROBLEMS_SHEET, get_token as get_gsheets_token
 from sync_google_sheet_schema import get_values, update_values
 
 
@@ -17,9 +18,12 @@ ROOT = Path(__file__).resolve().parents[1]
 CREDS_PATH = ROOT / "credentials.env"
 TOKENS_PATH = ROOT / "tokens.json"
 TRACK_DURATION_MIN_MS = 150_000
-TRACK_DURATION_MAX_MS = 300_000
+TRACK_DURATION_MAX_MS = 550_000
 TRACK_DURATION_SWEET_MIN_MS = 180_000
 TRACK_DURATION_SWEET_MAX_MS = 270_000
+PLAYLIST_DISCLAIMER = (
+    "Independent artistic response. Not affiliated with, endorsed by, or representing the reference artist or their estate."
+)
 
 
 def load_env_file(path: Path) -> dict[str, str]:
@@ -68,23 +72,47 @@ def refresh_access_token(client_id: str, client_secret: str, refresh_token: str)
 
 
 def spotify_json(url: str, token: str, method: str = "GET", payload: dict | None = None) -> dict:
-    data = None if payload is None else json.dumps(payload).encode()
-    req = urllib.request.Request(
-        url,
-        data=data,
-        headers={
-            "Authorization": f"Bearer {token}",
-            "Content-Type": "application/json",
-        },
-        method=method,
-    )
-    with urllib.request.urlopen(req) as resp:
-        body = resp.read()
-    return json.loads(body) if body else {}
+    last_exc: Exception | None = None
+    for attempt in range(5):
+        data = None if payload is None else json.dumps(payload).encode()
+        req = urllib.request.Request(
+            url,
+            data=data,
+            headers={
+                "Authorization": f"Bearer {token}",
+                "Content-Type": "application/json",
+            },
+            method=method,
+        )
+        try:
+            with urllib.request.urlopen(req) as resp:
+                body = resp.read()
+            return json.loads(body) if body else {}
+        except urllib.error.HTTPError as exc:
+            if exc.code == 429 and attempt < 4:
+                retry_after = exc.headers.get("Retry-After")
+                sleep_seconds = float(retry_after) if retry_after else (2 ** attempt)
+                time.sleep(sleep_seconds)
+                last_exc = exc
+                continue
+            raise
+        except Exception as exc:  # noqa: BLE001
+            last_exc = exc
+            if attempt < 4:
+                time.sleep(2 ** attempt)
+                continue
+            raise
+    if last_exc:
+        raise last_exc
+    return {}
 
 
 def normalize_token(text: str) -> str:
     return re.sub(r"[^a-z0-9]+", " ", text.lower()).strip()
+
+
+def track_key(track_line: str) -> str:
+    return normalize_token(track_line.replace("–", "-"))
 
 
 def token_overlap_score(expected: str, actual: str) -> int:
@@ -106,7 +134,31 @@ def parse_playlist_plan(path: Path) -> tuple[str, str, int, list[str], str, str]
     return name, rationale, target_min, tracks, redirect_url, qr_target
 
 
-def search_track(track_line: str, token: str) -> dict:
+def load_track_problem_registry() -> dict[str, dict[str, str]]:
+    token = get_gsheets_token()
+    rows = get_values(token, f"{TRACK_PROBLEMS_SHEET}!A:H")
+    if not rows:
+        return {}
+    headers = rows[0]
+    registry: dict[str, dict[str, str]] = {}
+    for row in rows[1:]:
+        if not row:
+            continue
+        padded = row + [""] * (len(headers) - len(row))
+        record = dict(zip(headers, padded))
+        if record.get("is_active", "").strip() != "1":
+            continue
+        key = record.get("track_key", "").strip().lower()
+        if key:
+            registry[key] = record
+    return registry
+
+
+def search_track(track_line: str, token: str, blocked_tracks: dict[str, dict[str, str]]) -> dict:
+    blocked = blocked_tracks.get(track_key(track_line))
+    if blocked:
+        reason = blocked.get("reason", "blocked")
+        raise RuntimeError(f"Spotify track blocked by TRACK_PROBLEMS registry: {track_line} ({reason})")
     artist, track = [part.strip() for part in track_line.split(" - ", 1)]
     candidate_queries = [
         f"track:{track} artist:{artist}",
@@ -246,7 +298,13 @@ def update_playlist_file(plan_path: Path, playlist_id: str, playlist_url: str) -
     lines = plan_path.read_text().splitlines()
     new_lines: list[str] = []
     inserted = False
+    disclaimer_inserted = False
     for line in lines:
+        if line.startswith("DISCLAIMER:"):
+            if not disclaimer_inserted:
+                new_lines.append(f"DISCLAIMER: {PLAYLIST_DISCLAIMER}")
+                disclaimer_inserted = True
+            continue
         new_lines.append(line)
         if line.startswith("PLAYLIST_TARGET_DURATION_MIN:"):
             new_lines.append(f"SPOTIFY_PLAYLIST_ID: {playlist_id}")
@@ -255,6 +313,8 @@ def update_playlist_file(plan_path: Path, playlist_id: str, playlist_url: str) -
     if not inserted:
         new_lines.append(f"SPOTIFY_PLAYLIST_ID: {playlist_id}")
         new_lines.append(f"SPOTIFY_PLAYLIST_URL: {playlist_url}")
+    if not disclaimer_inserted:
+        new_lines.append(f"DISCLAIMER: {PLAYLIST_DISCLAIMER}")
     plan_path.write_text("\n".join(new_lines) + "\n")
 
 
@@ -293,13 +353,14 @@ def main() -> None:
     name, rationale, target_min, track_lines, redirect_url, qr_target = parse_playlist_plan(plan_path)
     description = (
         f"Canvas & Glass episode playlist for {args.episode_slug}. "
-        f"{rationale} Redirect: {redirect_url} | Video target: {qr_target}"
+        f"{rationale} {PLAYLIST_DISCLAIMER} Redirect: {redirect_url} | Video target: {qr_target}"
     )
     playlist = ensure_playlist(access_token, name, description[:300])
     playlist_id = playlist["id"]
     playlist_url = playlist["external_urls"]["spotify"]
 
-    track_items = [search_track(track_line, access_token) for track_line in track_lines]
+    blocked_tracks = load_track_problem_registry()
+    track_items = [search_track(track_line, access_token, blocked_tracks) for track_line in track_lines]
     validate_track_items(track_items, target_min)
     add_tracks_to_playlist(playlist_id, [item["uri"] for item in track_items], access_token)
 

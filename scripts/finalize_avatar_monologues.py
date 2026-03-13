@@ -139,14 +139,14 @@ def validate_heygen_markup(mon_key: str, text: str) -> list[str]:
     return issues
 
 
-def validate_finals(drafts: dict[str, str], finals: dict[str, str]) -> None:
+def collect_final_issues(drafts: dict[str, str], finals: dict[str, str]) -> list[str]:
     issues: list[str] = []
 
     for mon_key, draft_text in drafts.items():
         final_text = finals[mon_key]
         word_count = len(re.findall(r"[A-Za-z0-9']+", final_text))
-        if word_count < 180 or word_count > 250:
-            issues.append(f"{mon_key}: word count {word_count} is outside the 180-250 range.")
+        if word_count > 500:
+            issues.append(f"{mon_key}: word count {word_count} exceeds the 500-word maximum.")
         if normalize_for_comparison(draft_text) == normalize_for_comparison(final_text):
             issues.append(f"{mon_key}: final is identical to draft.")
             continue
@@ -168,6 +168,11 @@ def validate_finals(drafts: dict[str, str], finals: dict[str, str]) -> None:
                 issues.append("mon2: adjacent sentences are too duplicative.")
                 break
 
+    return issues
+
+
+def validate_finals(drafts: dict[str, str], finals: dict[str, str]) -> None:
+    issues = collect_final_issues(drafts, finals)
     if issues:
         raise RuntimeError("Final monologue validation failed: " + " ".join(issues))
 
@@ -237,7 +242,7 @@ Session durations:
 
 Redirects and playlist:
 - playlist_name: {playlist_name}
-- spotify_playlist_url: {manifest['spotify_playlist_url']}
+- spotify_playlist_url: {manifest.get('spotify_playlist_url', '')}
 - playlist_redirect_url: {manifest['redirects']['spotify_playlist']}
 - video_redirect_url: {manifest['redirects']['episode_video']}
 
@@ -299,7 +304,7 @@ Task:
 13. MON3 must deepen the approach into the third painting. Do not limit MON3 changes to factual cleanup only.
 14. MON4 must sound gathered and human, with gratitude integrated into the closing movement rather than pasted in as a stock thank-you.
 15. Preserve the meditation timing flow: MON1 at [00:00], MON2 at [20:00], MON3 at [40:00], MON4 at [60:00].
-16. Keep each monologue between 180 and 250 words unless a minor exception is clearly necessary.
+16. Keep each monologue under 500 words. Do not compress good material just to chase an arbitrary short target.
 17. MON1 must include the research hook or strongest hook fact, breathing entry, painting 1 setup, wine bouquet, and Spotify call.
 18. MON2 must include exactly 2 sensory facts from research_sensory_facts and explain why the painting is a response to the master's work.
 19. MON3 must use research_philosophy_anchor and mention how the wine has evolved in the glass.
@@ -491,14 +496,14 @@ def main() -> None:
     avatar_sp = read_text(str(ROOT / "docs" / "final-avatar-agent.txt"))
     avatar_osr = read_text(str(ROOT / "docs" / "final-avatar-agent-orchestration-osr.txt"))
 
-    response = call_anthropic(
-        api_key,
-        build_system_prompt(avatar_sp, avatar_osr),
-        build_user_prompt(package, manifest),
-    )
-    monologues = parse_blocks(response)
     drafts = {key: read_text(path) for key, path in package["draft_monologue_scripts"].items()}
-    validate_finals(drafts, monologues)
+    system_prompt = build_system_prompt(avatar_sp, avatar_osr)
+    user_prompt = build_user_prompt(package, manifest)
+    response = call_anthropic(api_key, system_prompt, user_prompt)
+    monologues = parse_blocks(response)
+    issues = collect_final_issues(drafts, monologues)
+    if issues:
+        raise RuntimeError("Final monologue validation failed: " + " ".join(issues))
     package["final_monologue_scripts"] = canonical_final_paths(package)
     write_finals(package["final_monologue_scripts"], monologues)
     heygen_payload = build_heygen_prompt_files(package, env)

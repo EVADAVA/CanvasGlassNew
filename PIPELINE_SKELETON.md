@@ -14,9 +14,10 @@ Episode algorithm
 10. `HeyGen` later turns approved monologue prompts into avatar videos through manual operator submission.
 11. `Painting QR Agent` prepares painting QR assets.
 12. `Publisher Agent` builds title, description, links, and publish package.
-13. `Render Maker Agent` assembles the final video.
-14. publish the episode.
-15. `MS` marks the artist as `used`.
+13. if the run is `test`, stop when the YouTube package is ready in `output/<run>/youtube/`.
+14. if the run is `start`, `Render Maker Agent` assembles the final video.
+15. publish the episode.
+16. `MS` marks the artist as `used`.
 
 Pipeline table
 
@@ -33,10 +34,11 @@ Pipeline table
 | 9 | stop gate | approved avatar package with `*_final.txt` scripts and manual HeyGen prompt handoff | `HeyGen status = prompt_ready_not_sent` | none | manifest + monologue package |
 | 10 | `HeyGen` execution | approved monologue prompts and avatar mapping | rendered avatar clips | manual operator action inside HeyGen UI, supported by HeyGen API references | `output/episode*_artistname/heygen/` |
 | 11 | `Painting QR Agent` | painting redirect URLs | `painting_1_qr..painting_3_qr` | QR generation utility, redirect registry on `evadava.com` | `output/episode*_artistname/qr/` |
-| 12 | `Publisher Agent` | all episode assets and metadata | `videodescription`, publish package, SEO blocks | YouTube-facing prep layer, optional Sheets updates | `output/episode*_artistname/publish/` |
-| 13 | `Render Maker Agent` | paintings, monologues, QR assets, timing, HeyGen clips | final render package / video | ffmpeg / local render stack | `output/episode*_artistname/render/` or final publish path |
-| 14 | publish | final video package | YouTube private video, final URL | YouTube API | `EPISODES`, publish logs |
-| 15 | `MS finalize` | publish success state | `ARTIST_POOL.status = used` | Google Sheets API | Google Sheet only |
+| 12 | `Publisher Agent` | all episode assets and metadata | `videodescription`, timestamps, SEO blocks, YouTube package | YouTube-facing prep layer, optional Sheets updates | `output/episode*_artistname/youtube/` and `output/episode*_artistname/publish/` |
+| 13 | test stop gate | approved package for channel upload | `youtube_package_ready` | none | manifest + `output/.../youtube/` |
+| 14 | `Render Maker Agent` | paintings, monologues, QR assets, timing, HeyGen clips | final render package / video | ffmpeg / local render stack | `output/episode*_artistname/render/` or final publish path |
+| 15 | publish | final video package | YouTube private video, final URL | YouTube API | `EPISODES`, publish logs |
+| 16 | `MS finalize` | publish success state | `ARTIST_POOL.status = used` | Google Sheets API | Google Sheet only |
 
 Google Sheet skeleton
 
